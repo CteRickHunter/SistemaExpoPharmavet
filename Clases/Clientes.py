@@ -39,4 +39,35 @@ class Clientes:
         self.telefono=tel
         self.correo_electronico=mail
     
+    def leer_lista(self,lista):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+        cur.execute("SELECT cod_cliente,nombre FROM Clientes")
+        con.commit()
+        datos_clientes=cur.fetchall()
+        for dato in datos_clientes:
+            dato_txt=str(dato[0])+"-*-"+str(dato[1])
+            lista.append(dato_txt)
 
+        return lista
+
+        con.close()
+    
+    def buscar_cliente(self,codigo):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+        cur.execute("SELECT * FROM Clientes where cod_cliente='"+codigo+"'")
+        con.commit()
+        dato=cur.fetchone()
+        print("El dato es: ",dato)
+        self.cod_cliente=dato[0]
+        self.nombre=dato[1]
+        self.direccion=dato[2]
+        self.localidad=dato[3]
+        self.cod_pais=dato[4]
+        self.id_tributaria=dato[5]
+        self.condicion_venta=dato[6]
+        self.telefono=dato[7]
+        self.correo_electronico=dato[8]
+
+        con.close()

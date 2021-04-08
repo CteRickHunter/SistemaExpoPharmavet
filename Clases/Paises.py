@@ -38,5 +38,14 @@ class Paises:
 
         con.close()
 
-    
+    def busca_nombre(self,codigo):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+        cur.execute("SELECT pais FROM Paises WHERE cod_pais='"+codigo+"'")
+        con.commit()
+        dato=cur.fetchone()
+        
+        return dato[0]
+
+        con.close()
 

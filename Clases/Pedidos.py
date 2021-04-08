@@ -3,7 +3,7 @@ import sqlite3
 
 class Pedidos:
     
-    def __init__(self,f_ped="",c_cli="",inco="",s_txt="",s_imp=0.0,f_txt="",f_imp=0.0,nota=""):
+    def __init__(self,f_ped="",c_cli="",inco="",s_txt="seguro",s_imp=0.0,f_txt="flete",f_imp=0.0,nota=""):
         self.fecha_pedido=f_ped
         self.cod_cliente=c_cli
         self.incoterm=inco
@@ -17,11 +17,18 @@ class Pedidos:
 
         con=sqlite3.connect("SistemaExpo")
         cur=con.cursor()
-    
-        cur.execute("INSERT INTO Pedidos VALUES('"+self.fecha_pedido+
-        "','"+self.cod_cliente+"','"+self.incoterm+"','"+
-        self.seguro_texto+"',"+self.seguro_importe+",'"+
-        self.flete_texto+"',"+self.flete_importe+",'"+
+        print("INSERT INTO Pedidos (fecha_pedido,cod_cliente,"+
+        "incoterm,seguro_texto, seguro_importe,flete_texto,flete_importe,nota)"+
+        " VALUES('"+self.fecha_pedido+"','"+self.cod_cliente+"','"+self.incoterm+"','"+
+        self.seguro_texto+"',"+str(self.seguro_importe)+",'"+
+        self.flete_texto+"',"+str(self.flete_importe)+",'"+
+        self.nota+"')")
+
+        cur.execute("INSERT INTO Pedidos (fecha_pedido,cod_cliente,"+
+        "incoterm,seguro_texto, seguro_importe,flete_texto,flete_importe,nota)"+
+        " VALUES('"+self.fecha_pedido+"','"+self.cod_cliente+"','"+self.incoterm+"','"+
+        self.seguro_texto+"',"+str(self.seguro_importe)+",'"+
+        self.flete_texto+"',"+str(self.flete_importe)+",'"+
         self.nota+"')")
         
         con.commit()

@@ -8,15 +8,15 @@ conectado=sqlite3.connect("SistemaExpo")
 puntero=conectado.cursor()
 puntero.execute(''' 
 CREATE TABLE Pedidos(
-id_pedido	INTEGER AUTO_INCREMENT PRIMARY KEY,
+id_pedido	 integer primary key autoincrement,
 fecha_pedido VARCHAR(10) NOT NULL,
 cod_cliente	VARCHAR(6) NOT NULL,
-incoterm    VARCHAR(30) NOT NULL,
-seguro_texto	VARCHAR(30) NOT NULL,
-seguro_importe	REAL NOT NULL,
+incoterm    VARCHAR(30),
+seguro_texto	VARCHAR(30),
+seguro_importe	REAL,
 flete_texto	VARCHAR(30),
 flete_importe	REAL,
-nota	TEXT NOT NULL)''')
+nota	TEXT)''')
 
 conectado.commit()
 conectado.close()
