@@ -59,7 +59,7 @@ class Clientes:
         cur.execute("SELECT * FROM Clientes where cod_cliente='"+codigo+"'")
         con.commit()
         dato=cur.fetchone()
-        print("El dato es: ",dato)
+        #print("El dato es: ",dato)
         self.cod_cliente=dato[0]
         self.nombre=dato[1]
         self.direccion=dato[2]

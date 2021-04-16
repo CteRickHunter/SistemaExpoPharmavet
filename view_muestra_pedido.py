@@ -5,6 +5,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 from Clases import Pedidos,Clientes, Paises, Productos, Pais_Precios, Items
 
@@ -12,163 +14,136 @@ from Clases import Pedidos,Clientes, Paises, Productos, Pais_Precios, Items
 
 color="#f2d05e"
 # - - - - - - - funciones - - - - - - - - 
-def buscaItem():
+def buscaPedido():
     
-    prod=Productos.Productos()
-    lista_productos=prod.leer_lista()
+    ped=Pedidos.Pedidos()
+    print(codigoCliEntry.get(), len(codigoCliEntry.get()))
+    lista_pedidos=ped.lista_pedidos(codigoCliEntry.get())
 
-    hija=Toplevel()
-    hija.title("Carga de Items")
-    hija.iconbitmap("images/logo.ico")
-    hija.resizable(0,0)
+    
+    print(lista_pedidos)
 
-    frame2=Frame(hija)
-    frame2.config(bg=color, width="650", height="350")
-    frame2.pack(fill="both", expand="False")
+    
+    fechaPedEntry=ttk.Combobox(frame,values=lista_pedidos,width=12, state="readonly")
+    fechaPedEntry.grid(row=4,column=5,sticky="w",padx=5, pady=5)
+    fechaPedEntry.config(font="Arial 10")
+
+    okBtn=Button(frame,text="Ok" ,command=lambda:buscar_pedido_elegido())
+    okBtn.grid(row=4,column=5,ipady=5,padx=2,sticky="e")
+    okBtn.config(width="3")
+
+    
+
+
+    def buscar_pedido_elegido():
+        global fecha,id_cli
+        aux=fechaPedEntry.get()
+        id_cli=int(aux[0:-13])
+        fecha=aux[-10:]
+        fechaPedEntry.set(fecha)
+
+        pedidoEntry.delete(1.0,END)
         
-    listaProdEntry=ttk.Combobox(frame2,values=lista_productos,width=40,state="readonly")
-    listaProdEntry.grid(row=1,column=1,sticky="w",padx=5, pady=5)
-    listaProdEntry.config(font="Arial 10")
-
-    cantLabel=Label(frame2,text="Cantidad")
-    cantLabel.grid(row=0,column=2,ipady=5)
-    cantLabel.config(bg=color)
-
-    cantidad=StringVar()
-    cantProdEntry=Entry(frame2,textvariable=cantidad,width=10)
-    cantProdEntry.grid(row=1,column=2,ipady=5)
-
-    eligeItemBtn=Button(frame2,text="Elige Item", command=lambda:agregaItem(listaProdEntry.get(),cantProdEntry.get()))
-    eligeItemBtn.grid(row=2,column=1,ipady=5)
-    eligeItemBtn.config(width="20")
-
-    
-    
-
-    
-    def agregaItem(item,cant):
-        global cod_pais
-        global cod_producto
-        if item=="":
-            messagebox.showerror("ERROR", "Debe elegir un producto")
-            hija.destroy()
-            return
-
-        if  cant=="" or int(cant)<1:
-            messagebox.showerror("ERROR", "Cantidad no puede ser menor a 1")
-            hija.destroy()
-            return
-        # Busca Producto y formatea
-        cod=item[0:10]
-        p=Productos.Productos()
-        p.busca_producto(cod)
-        cod_producto=cod
-        producto=p.nombre_producto+"                              "
-        producto=producto[0:35]
-
-        # Formatea Cantidad
-        cant="         "+cant+" "
-        cant=cant[-8:-1]
-
-        # busca precio y formatea
-        pp=Pais_Precios.Pais_Precios()
-        precio=pp.busca_precio(cod_pais, cod_producto)
-        pre="          "+str(precio)+" "
-        pre=pre[-11:-1]
-        total= float(precio) * float(cant)
-        total_ped.set(total_ped.get()+total)
-
-        p_total="              "+str('{:,.3f}'.format(total))
-        p_total=p_total[-15:-1]
-        
-
-        item=p.cod_producto+" - "+producto+" - "+cant+ " - "+pre+" - "+p_total
-
-        # Activa boton de grabar pedido
         grabarPedBtn['state'] = NORMAL
 
-        pedidoEntry.insert(END,item+"\n")
-        hija.destroy()
+        ped=Pedidos.Pedidos()
+        ped.busca_pedido(id_cli)
+        incotermEntry.set(ped.incoterm)
+        condicionEntry.set(ped.condicion)
+        nota.set(ped.nota)
+        seguro.set(ped.seguro_importe)
+        flete.set(ped.flete_importe)
+        flete_var.set(ped.flete)
+        seguro_var.set(ped.seguro)
+
+        # Busca los items dl pedido
+        ped_items=Items.Items()
+        lista_items=ped_items.busca_item(id_cli)
+        total=0.0
+
+        for dato in lista_items:
+            p_total=dato[-15:-1]
+            p_total=p_total.strip()
+            p_total=p_total.replace(",","")
+            total=total+float(p_total)
+            pedidoEntry.insert(END,dato+"\n")
+
+        total_ped.set(str('{:,.2f}'.format(total)))
+        
+
+        #p_total=p_total[-15:-1]
+        #item=p.cod_producto+" - "+producto+" - "+cant+ " - "+pre+" - "+p_total
+
+    
+
+def imprimirPed():
+    global fecha,cod_cli, id_trib, id_cli
+    
+    w , h=A4
+    nombre_archivo="Proforma"+str('{:06d}'.format(id_cli))+".pdf"
+    c=canvas.Canvas(nombre_archivo, pagesize=A4)
+    c.rect(30,30,530,770)
+
+    c.drawImage("./images/Logo-Pharmavet-300x127.jpg",50,730,width=150,height=60)
+    
+    text=c.beginText(210,730)
+    text.setFont("Times-Roman",14)
+    text.textLine("PEDIDO "+nombre.get())
+    c.drawText(text)
+
+    text=c.beginText(50,700)
+    text.setFont("Times-Roman",10)
+    text.textLine("Fecha: "+fecha+"                      Cod. Cliente: "
+    +cod_cli+"     ID Tributaria: "+id_trib+"    Proforma: PF"+str('{:06d}'.format(id_cli)))
+
+    text.textLine("")
+
+    text.setFont("Courier",9)
+    text.textLine("Código Prod                 Producto              Cantidad    Precio U$S        Total U$S")
+    
+    #lineas de separación
+    c.line(30,690,560,690)
+    text.textLine("")
+    c.line(35,670,555,670)
 
 
-
-
-def grabarPed():
-    hoy=datetime.now()
-    dia_hoy = hoy.strftime("%d/%m/%Y")
-
-    # verificar seguro y flete
-    #Seguro - - - 
-    #print(seguro.get(), type(seguro.get()))
-    if not seguro_var.get():
-        #print("es Falso")
-        seguro.set(0)
-    else:
-        #print("es Verdadero")
-        if seguro.get()=="":
-            #print("Esta vacio")
-            seguro.set(0)
-            
-        else:
-            if seguro.get().isdigit():
-                # El dato del seguro es correcto
-                #print(float(seguro.get()))
-                pass
-            else:
-                seguro.set(0)
-    #Flete - - - 
-    #print(flete.get(), type(flete.get()))
-    if not flete_var.get():
-        #print("es Falso")
-        flete.set(0)
-    else:
-        #print("es Verdadero")
-        if flete.get()=="":
-            #print("Esta vacio")
-            flete.set(0)
-            
-        else:
-            if flete.get().isdigit():
-                # El dato del flete es correcto
-                #print(float(flete.get()))
-                pass
-            else:
-                flete.set(0)
-    #  Fin control Seguro y Flete
-
-     
-    # - - - - - - - - - - - 
-    nuevo_pedido=Pedidos.Pedidos(dia_hoy,codigoCliEntry.get(),incotermEntry.get(),seguro_var.get(),seguro.get(),flete_var.get(),flete.get(),condicionEntry.get(),nota.get())
-    nuevo_pedido.guardar_pedidos()
-
-    nro_pedido=nuevo_pedido.ultimo_registro()
-
-    texto=pedidoEntry.get(1.0,END)
-    print(texto)
-
-    linea=Items.Items()
+    ped_items=pedidoEntry.get(1.0,END)
     x=0
-    y=88
-    # leo las lineas del pedido y grabo
     while True:
         
-        linea.id_pedido=nro_pedido
-        linea.cod_producto=texto[x:x+10]
-        linea.cantidad=int(texto[x+50:x+58])
-        linea.precio=float(texto[x+60:x+71])
-        # Graba registro Item
-        linea.guardar_producto()
+        linea=ped_items[x:x+88]
+        text.textLine(linea)
 
-        #print(texto[x:y])
-        #print("- - - -",texto[x:x+10]," - - - - - ")
         x=x+89
-        y=y+89
-        z=texto[x:x+10]
+        z=ped_items[x:x+10]
         if not (z.isdigit()):
             break
+    
+    text.textLine("")
+    
+    text.textLine("TOTAL FOB - Rosario - Santa Fe - Argentina                                     "+totalEntry.get())
+    text.textLine("")
+    text.textLine("El importe corresponde a Dólares Estadounidenses")
+    text.textLine("País de Origen: Argentina")
+    text.textLine("")
+    text.textLine("")
+    
+    
+    if flete_var.get():
+        text.textLine("Anexos de Costo de Seguro y Flete: ")
+        text.textLine("Flete:        "+str(flete.get()))
+        text.textLine("Seguro:       "+str(seguro.get()))
         
-    limpiar_cliente()
-        
+    c.drawText(text)
+
+    text=c.beginText(40,40)
+    text.setFont("Times-Roman",6)
+    text.textLine("Programado por: Osvaldo G. Campilongo")
+    c.drawText(text)
+    c.showPage()
+    c.save()
+    return
+
     
 
 
@@ -189,10 +164,11 @@ def limpiar_cliente():
     flete_var.set(0)
     seguro_var.set(0)
     total_ped.set("")
+        
     codigoCliEntry.focus()
 
 def confirma_cliente(cod):
-    global cod_pais
+    global cod_pais, id_trib, cod_cli
     f=True
     if len(cod)>6:
         cod=cod[0:6]
@@ -205,14 +181,6 @@ def confirma_cliente(cod):
              return
         f=False
     
-    if incotermEntry.get()=="" :
-        messagebox.showerror("ERROR", "INCOTERM: Falta Completar")
-        return
-
-    if condicionEntry.get()=="" :
-        messagebox.showerror("ERROR", "Condición de venta: Falta Completar")
-        return
-
     if not f :
         messagebox.showerror("ERROR", "Faltó completar algún Campo")
         return
@@ -221,6 +189,9 @@ def confirma_cliente(cod):
     cli=Clientes.Clientes()
     
     cli.buscar_cliente(cod)
+    cod_cli=cod
+    id_trib=cli.id_tributaria
+
     pais=Paises.Paises()
     cod_pais=cli.cod_pais
     nombre_pais=pais.busca_nombre(cli.cod_pais)
@@ -238,7 +209,7 @@ def confirma_cliente(cod):
 
 # - - - - - - - - - - Prog. Principal - - - - - - - 
 raiz=Tk()
-raiz.title("Carga de Pedidos")
+raiz.title("Muestra Pedidos")
 raiz.iconbitmap("images/logo.ico")
 raiz.resizable(0,0)
 
@@ -249,6 +220,10 @@ frame.pack(fill="both", expand="False")
 # - - - - - -  Variables Globales - - - - - - - - 
 cod_pais=""
 cod_producto=""
+fecha=""
+id_trib=""
+cod_cli=""
+id_cli=0
 # - - - - - -  Variables para los Entry - - - - - -
 
 nombre = StringVar()
@@ -263,7 +238,7 @@ total_ped=DoubleVar()
 
 
 # - - - - -  Labels - - - - - -
-pedidosLbl=Label(frame,text="Pedidos")
+pedidosLbl=Label(frame,text="Muestra Pedidos")
 pedidosLbl.config(bg=color,font="Arial 25")
 pedidosLbl.grid(row=0,column=0,padx=5, pady=5, columnspan=5)
 
@@ -323,35 +298,43 @@ incoterms=[
     "FOB-Rosario-Santa FE-ARG", 
     "FOB-Buenos Aires-ARG",
     "CIF-Destino"]
-incotermEntry=ttk.Combobox(frame,values=incoterms,width=30,state="readonly")
+incotermEntry=ttk.Combobox(frame,values=incoterms,width=30, state=DISABLED)
 incotermEntry.grid(row=3,column=1,sticky="w",padx=5, pady=5,columnspan=2)
 incotermEntry.config(font="Arial 12")
 
 seguro_var = IntVar()
-seguroCheck=ttk.Checkbutton(frame,text="Seguro",variable=seguro_var)
+seguroCheck=ttk.Checkbutton(frame,text="Seguro", state=DISABLED,variable=seguro_var)
 seguroCheck.grid(row=3,column=3,sticky="e")
 
-seguroEntry=Entry(frame,textvariable=seguro,width=15)
+seguroEntry=Entry(frame,textvariable=seguro, state=DISABLED,width=15)
 seguroEntry.grid(row=3,column=4,sticky="w",padx=5, pady=5)
 seguroEntry.config(font="Arial 10")
+
+fechaPedLbl=Label(frame,text="Fecha Pedido",width=12)
+fechaPedLbl.grid(row=3,column=5,sticky="w", pady=5)
+fechaPedLbl.config(font="Arial 10", bg=color)
 
 condiciones=[
     "100% Adelantado", 
     "50% Adelantado, 50% a 30 días F.Emb.",
     "A 60 días F. Embarque",
     "A 90 días F. Embarque"]
-condicionEntry=ttk.Combobox(frame,values=condiciones,width=30,state="readonly")
+condicionEntry=ttk.Combobox(frame,values=condiciones,width=30, state=DISABLED)
 condicionEntry.grid(row=4,column=1,sticky="w",padx=5, pady=5,columnspan=2)
 condicionEntry.config(font="Arial 12")
 
 flete_var = IntVar()
-fleteCheck=ttk.Checkbutton(frame,text="Flete",variable=flete_var)
+fleteCheck=ttk.Checkbutton(frame,text="Flete", state=DISABLED,variable=flete_var)
 fleteCheck.grid(row=4,column=3,sticky="e")
 
-fleteEntry=Entry(frame,textvariable=flete,width=15)
-fleteEntry.grid(row=4,column=4,sticky="w",padx=5, pady=5)
+fleteEntry=Entry(frame,textvariable=flete, state=DISABLED,width=15)
+fleteEntry.grid(row=4,column=4,sticky="w", pady=5)
 fleteEntry.config(font="Arial 10")
 
+#fechas_pedido=[]
+#fechaPedEntry=ttk.Combobox(frame,values=fechas_pedido,width=12, state=DISABLED)
+#fechaPedEntry.grid(row=4,column=5,sticky="w",padx=5, pady=5)
+#fechaPedEntry.config(font="Arial 10", state=DISABLED)
 
 confirmaBtn=Button(frame,text="Confirma Cliente" ,command=lambda:confirma_cliente(codigoCliEntry.get()))
 confirmaBtn.grid(row=5,column=1,ipady=5,sticky="w")
@@ -382,11 +365,13 @@ pedidoEntry=Text(frame,width=90, height=10)
 pedidoEntry.grid(row=7,column=1,sticky="w",padx=5, pady=5, columnspan=4,rowspan=4)
 pedidoEntry.config(font="Courier 10")
 
-nuevoItemBtn=Button(frame,text="Nuevo Item", state=DISABLED,command=lambda:buscaItem())
+nuevoItemBtn=Button(frame,text="Busca Pedido", state=DISABLED,command=lambda:buscaPedido())
 nuevoItemBtn.grid(row=7,column=5,ipady=5)
 nuevoItemBtn.config(width="20")
+# FALTA: Desactivar datos de incoterm, condiciones, seguro y flete hasta confirmar cliente
+# Activarlos una vez que fijemos el pedido
 
-grabarPedBtn=Button(frame,text="Grabar Pedido", state=DISABLED, command=lambda:grabarPed())
+grabarPedBtn=Button(frame,text="Imprime Proforma", state=DISABLED, command=lambda:imprimirPed())
 grabarPedBtn.grid(row=8,column=5,ipady=5)
 grabarPedBtn.config(width="20")
 

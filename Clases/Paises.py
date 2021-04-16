@@ -44,8 +44,8 @@ class Paises:
         cur.execute("SELECT pais FROM Paises WHERE cod_pais='"+codigo+"'")
         con.commit()
         dato=cur.fetchone()
-        
+        con.close()
         return dato[0]
 
-        con.close()
+        
 
