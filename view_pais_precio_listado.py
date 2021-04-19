@@ -7,6 +7,7 @@ from tkinter import ttk
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
+from datetime import datetime
 
 from Clases import Productos,Paises, Pais_Precios
 
@@ -38,7 +39,8 @@ def grabarPrecio(cod_pais,cod_prod,precio):
             return
         f=False
     
-    if not precio.isdigit():
+    aux=precio.replace(".","")
+    if not aux.isdigit():
         messagebox.showerror("ERROR", "El <<<Precio>>>\n deben ser numérico")
         return
 
@@ -74,6 +76,9 @@ def limpiaDatos() :
     
 def listaPrecios():
     global c, text
+    hoy=datetime.now()
+    dia_hoy = hoy.strftime("%d/%m/%Y")
+
     pagina=1
     pais=codigoPaisEntry.get()
     if len(pais)>2:
@@ -93,7 +98,7 @@ def listaPrecios():
     pre=Pais_Precios.Pais_Precios()
     lista=pre.lista_precios(pais)
 
-    nombre_archivo="Listado.pdf"
+    nombre_archivo="Listadoprecios_"+nombre_pais+".pdf"
     c=canvas.Canvas(nombre_archivo, pagesize=A4)
     cabecera(nombre_pais)
 
@@ -106,6 +111,7 @@ def listaPrecios():
         cod_prod=li[0]
         precio_prod=li[1]
         prod.busca_producto(cod_prod)
+                
         #print(prod.nombre_producto," precio: ",'{:.2f}'.format(precio_prod))
         n_p=prod.nombre_producto+"                                                "
         n_p=n_p[0:50]
@@ -115,7 +121,7 @@ def listaPrecios():
 
         if renglon==50:
             renglon=0
-            pie(pagina)
+            pie(pagina,dia_hoy)
             pagina+=1
             # nueva hoja
             cabecera(nombre_pais)
@@ -123,7 +129,7 @@ def listaPrecios():
             text.textLine("")
 
 
-    pie(pagina)
+    pie(pagina,dia_hoy)
     c.save()
     
 
@@ -150,12 +156,12 @@ def cabecera(nombre_pais):
     c.line(35,710,555,710)
     
 
-def pie(pag):
+def pie(pag, dia):
     global c, text
     c.drawText(text)
     text=c.beginText(40,40)
     text.setFont("Times-Roman",8)
-    text.textLine("Programado por: Osvaldo G. Campilongo                        página: "+str(pag))
+    text.textLine("Programado por: Osvaldo G. Campilongo                        página: "+str(pag)+"       Fecha: "+dia)
     c.drawText(text)
     c.showPage()
     

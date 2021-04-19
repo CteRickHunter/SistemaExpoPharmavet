@@ -22,6 +22,20 @@ class Productos:
         con.commit()
         con.close()
 
+    def actualizar_producto(self):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+    
+        cur.execute("UPDATE Productos SET "+
+        "cod_producto_base='"+self.cod_producto_base+"',"+
+        "nombre_producto_comercial='"+self.nombre_producto+"',"+
+        "peso_unitario="+str(self.peso_producto)+","+
+        "volumen_unitario="+str(self.volumen_producto)+
+        " WHERE cod_producto='"+self.cod_producto+"'")
+        
+        con.commit()
+        con.close()
+
     def setear_producto(self,cod1,cod2,nom,peso=1.0,vol=1.0):
         self.cod_producto = cod1
         self.cod_producto_base = cod2
@@ -56,3 +70,36 @@ class Productos:
         self.peso_producto = dato[3]
         self.volumen_producto = dato[4]
         con.close()
+
+    def existe_producto(self):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+        cur.execute("SELECT * FROM Productos WHERE cod_producto='"+self.cod_producto+"'")
+        con.commit()
+        dato=cur.fetchone()
+        
+        if dato:
+            con.close()
+            return True
+            
+        else:
+            con.close()
+            return False
+
+    def listar_productos(self):
+        lista=[]
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+        cur.execute("SELECT * FROM Productos ORDER BY nombre_producto_comercial")
+        con.commit()
+        datos_productos=cur.fetchall()
+        con.close()
+        for dato in datos_productos:
+            nombre_c=dato[2]+"                                                                          "
+            peso='{:6.2F}'.format(dato[3])
+            vol='{:6.2F}'.format(dato[4])
+            nombre_c=nombre_c[0:53]
+            dato_txt=str(dato[0])+"  "+nombre_c+peso+"  "+vol
+            lista.append(dato_txt)
+
+        return lista

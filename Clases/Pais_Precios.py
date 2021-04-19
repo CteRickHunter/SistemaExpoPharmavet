@@ -68,7 +68,7 @@ class Pais_Precios:
     def lista_precios(self,pais):
         con=sqlite3.connect("SistemaExpo")
         cur=con.cursor()
-        cur.execute("SELECT cod_producto,precio FROM Pais_Precio WHERE cod_pais='"+pais+"'")
+        cur.execute("SELECT cod_producto,precio FROM Pais_Precio WHERE cod_pais='"+pais+"' ORDER BY cod_producto")
         con.commit()
         lista=cur.fetchall()
         con.close()

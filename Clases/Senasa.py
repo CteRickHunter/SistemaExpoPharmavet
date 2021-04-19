@@ -47,7 +47,7 @@ class Senasa:
     def leer_lista(self,lista):
         con=sqlite3.connect("SistemaExpo")
         cur=con.cursor()
-        cur.execute("SELECT cod_producto_base, nombre_producto_SENASA FROM Datos_SENASA")
+        cur.execute("SELECT cod_producto_base, nombre_producto_SENASA FROM Datos_SENASA ORDER BY nombre_producto_SENASA")
         con.commit()
         datos_Senasa=cur.fetchall()
         for dato in datos_Senasa:
