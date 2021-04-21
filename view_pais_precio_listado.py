@@ -110,6 +110,7 @@ def listaPrecios():
         renglon=renglon+1
         cod_prod=li[0]
         precio_prod=li[1]
+        #print(cod_prod)
         prod.busca_producto(cod_prod)
                 
         #print(prod.nombre_producto," precio: ",'{:.2f}'.format(precio_prod))

@@ -13,7 +13,8 @@ from Clases import Pedidos,Clientes, Paises, Productos, Pais_Precios, Items
 color="#f2d05e"
 # - - - - - - - funciones - - - - - - - - 
 def buscaItem():
-    
+    global hija
+
     prod=Productos.Productos()
     lista_productos=prod.leer_lista()
 
@@ -23,7 +24,7 @@ def buscaItem():
     hija.resizable(0,0)
 
     frame2=Frame(hija)
-    frame2.config(bg=color, width="650", height="350")
+    frame2.config(bg=color, width="650", height="550")
     frame2.pack(fill="both", expand="False")
         
     listaProdEntry=ttk.Combobox(frame2,values=lista_productos,width=40,state="readonly")
@@ -38,17 +39,25 @@ def buscaItem():
     cantProdEntry=Entry(frame2,textvariable=cantidad,width=10)
     cantProdEntry.grid(row=1,column=2,ipady=5)
 
+    aux1Lbl=Label(frame2,text="")
+    aux1Lbl.grid(row=2,column=1,ipady=5)
+    aux1Lbl.config(bg=color)
+
     eligeItemBtn=Button(frame2,text="Elige Item", command=lambda:agregaItem(listaProdEntry.get(),cantProdEntry.get()))
-    eligeItemBtn.grid(row=2,column=1,ipady=5)
+    eligeItemBtn.grid(row=3,column=1,ipady=5)
     eligeItemBtn.config(width="20")
 
-    
+    aux2Lbl=Label(frame2,text="")
+    aux2Lbl.grid(row=4,column=1,ipady=5)
+    aux2Lbl.config(bg=color)
     
 
     
     def agregaItem(item,cant):
         global cod_pais
         global cod_producto
+        global hija
+        
         if item=="":
             messagebox.showerror("ERROR", "Debe elegir un producto")
             hija.destroy()
@@ -75,23 +84,51 @@ def buscaItem():
         precio=pp.busca_precio(cod_pais, cod_producto)
         pre="          "+str(precio)+" "
         pre=pre[-11:-1]
-        total= float(precio) * float(cant)
-        total_ped.set(total_ped.get()+total)
+        #total= float(precio) * float(cant)
+        #total_ped.set(total_ped.get()+total)
 
-        p_total="              "+str('{:,.3f}'.format(total))
-        p_total=p_total[-15:-1]
+        #p_total="              "+str('{:,.3f}'.format(total))
+        #p_total=p_total[-15:-1]
+
+        # Muestro precio y permito ajustar valor
+        aux1Lbl=Label(frame2,text="precio: ")
+        aux1Lbl.grid(row=2,column=1,ipady=5,sticky="e")
+        aux1Lbl.config(bg=color)
+
+        precio_un=StringVar()
+        precioEntry=Entry(frame2,textvariable=precio_un,width=10)
+        precioEntry.grid(row=2,column=2,ipady=5)
+        precio_un.set(pre)
         
 
-        item=p.cod_producto+" - "+producto+" - "+cant+ " - "+pre+" - "+p_total
+        #item=p.cod_producto+" - "+producto+" - "+cant+ " - "+pre+" - "+p_total
 
-        # Activa boton de grabar pedido
-        grabarPedBtn['state'] = NORMAL
+        #confirmaBtn=Button(frame2,text="Confirma precio", command=lambda:confirma_precio(item))
+        confirmaBtn=Button(frame2,text="Confirma precio", command=lambda:confirma_precio(cod,producto,cant,precioEntry.get()))
+        confirmaBtn.grid(row=4,column=1,ipady=5)
+        confirmaBtn.config(width="20")
+        # cod,producto,cant,precioEntry.get()
+        
 
-        pedidoEntry.insert(END,item+"\n")
-        hija.destroy()
+        
 
+def confirma_precio(cod,pro,cant,pre):
+    global hija
+    total= float(pre) * float(cant)
+    p_total="              "+str('{:,.3f}'.format(total))
+    p_total=p_total[-15:-1]
 
+    total_ped.set(total_ped.get()+total)
 
+    pre="          "+pre+" "
+    pre=pre[-11:-1]
+
+    item=cod+" - "+pro+" - "+cant+ " - "+pre+" - "+p_total
+    # Activa boton de grabar pedido
+    grabarPedBtn['state'] = NORMAL
+
+    pedidoEntry.insert(END,item+"\n")
+    hija.destroy()
 
 def grabarPed():
     hoy=datetime.now()
