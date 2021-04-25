@@ -52,13 +52,18 @@ def grabarCli(cod,nom,dir,loc,pais,cod_trib,cond,tel,mail):
         return
     
 
-    conectado=sqlite3.connect("SistemaExpo")
-    puntero=conectado.cursor()
+    cliente=Clientes.Clientes()
+    cliente.setear_clientes(cod,nom,dir,loc,pais,cod_trib,cond,tel,mail)
+        
+    if cliente.existe_cliente():
+        # actualiza cliente
+        cliente.actualiza_cliente()
+
+    else:
+        #inserta cliente
+        cliente.guardar_clientes()
     
-    puntero.execute("INSERT INTO Clientes VALUES('"+cod+"','"+nom+"','"+dir+"','"+loc+"','"+pais+"','"+cod_trib+"','"+cond+"','"+tel+"','"+mail+"')")
     
-    conectado.commit()
-    conectado.close()
     limpiaDatos()
 
 def limpiaDatos() :
@@ -71,8 +76,65 @@ def limpiaDatos() :
     condicion_venta.set("")
     telefono.set("")
     correo_electronico.set("")
+    codigoCliEntry['state']='normal'
     codigoCliEntry.focus()
     
+def buscarCli():
+    global hija
+    lista=[]
+    cliente=Clientes.Clientes()
+    lista_clientes=cliente.leer_lista(lista)
+        
+    hija=Toplevel()
+    hija.title("Busca Cliente")
+    hija.iconbitmap("images/logo.ico")
+    hija.resizable(0,0)
+
+    frame2=Frame(hija)
+    frame2.config(bg=color, width="650", height="350")
+    frame2.pack(fill="both", expand="False")
+
+ 
+    listaLbl=Label(frame2,text="Cliente:")
+    listaLbl.grid(row=1,column=0,padx=5, pady=5)
+    listaLbl.config(bg=color)
+
+    listaCliEntry=ttk.Combobox(frame2,values=lista_clientes,width=40,state="readonly")
+    listaCliEntry.grid(row=1,column=1,sticky="w",padx=5, pady=5)
+    listaCliEntry.config(font="Arial 10")
+
+    
+    eligeItemBtn=Button(frame2,text="Elige Cliente", command=lambda:muestra_cliente(listaCliEntry.get()))
+    eligeItemBtn.grid(row=3,column=0,ipady=5, columnspan=2)
+    eligeItemBtn.config(width="20")
+
+def muestra_cliente(cli):
+    global hija
+    # Busca registro donde apunta "prod"
+    cod_cli=cli[0:6]
+    cliente=Clientes.Clientes()
+    cliente.buscar_cliente(cod_cli)
+
+    cod_cliente.set(cliente.cod_cliente)
+    nombre.set(cliente.nombre)
+    direccion.set(cliente.direccion)
+    localidad.set(cliente.localidad)
+
+    pais=Paises.Paises()
+    codigo_pais=pais.buscar_pais(cliente.cod_pais)
+    codPaisEntry.set(codigo_pais)
+    id_tributaria.set(cliente.id_tributaria)
+    condicion_venta.set(cliente.id_tributaria)
+    telefono.set(cliente.telefono)
+    correo_electronico.set(cliente.correo_electronico)
+
+    
+    codigoCliEntry['state']='disabled'
+
+
+    hija.destroy()
+
+
 
 
 # - - - - - - - - - - Prog. Principal - - - - - - - 
@@ -175,6 +237,10 @@ telefonoEntry.config(font="Arial 15")
 mailEntry=Entry(frame,textvariable=correo_electronico)
 mailEntry.grid(row=8,column=1,sticky="w",padx=5, pady=5,)
 mailEntry.config(font="Arial 15")
+
+buscarBtn=Button(frame,text="Buscar", command=lambda:buscarCli())
+buscarBtn.grid(row=0,column=1,sticky="e",padx=5, pady=5,ipady=5)
+buscarBtn.config(width="10")
 
 guardarBtn=Button(frame,text="Guardar", command=lambda:grabarCli(cod_cliente.get(),nombre.get(),direccion.get(),localidad.get(),codPaisEntry.get(),id_tributaria.get(),condicion_venta.get(),telefono.get(),correo_electronico.get()))
 guardarBtn.grid(row=9,column=0,columnspan=2,ipady=5)

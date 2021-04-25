@@ -21,7 +21,7 @@ def buscaPedido():
     lista_pedidos=ped.lista_pedidos(codigoCliEntry.get())
 
     
-    print(lista_pedidos)
+    #print(lista_pedidos)
 
     
     fechaPedEntry=ttk.Combobox(frame,values=lista_pedidos,width=12, state="readonly")

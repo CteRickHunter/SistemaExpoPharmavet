@@ -28,6 +28,24 @@ class Clientes:
         con.commit()
         con.close()
 
+    def actualiza_cliente(self):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+    
+        cur.execute("UPDATE Clientes SET "+
+        "nombre='"+self.nombre+"',"+
+        "direccion='"+self.direccion+"',"+
+        "localidad='"+self.localidad+"',"+
+        "cod_pais='"+self.cod_pais+"',"+
+        "id_tributaria='"+self.id_tributaria+"',"+
+        "condicion_venta='"+self.condicion_venta+"',"+
+        "telefono='"+self.telefono+"',"+
+        "correo_electronico='"+self.correo_electronico+"'"+
+        " WHERE cod_cliente='"+self.cod_cliente+"'")
+        
+        con.commit()
+        con.close()
+
     def setear_clientes(self,cod,nom,dir,loc,pais,cod_trib,cond,tel,mail):
         self.cod_cliente=cod
         self.nombre=nom
@@ -71,3 +89,18 @@ class Clientes:
         self.correo_electronico=dato[8]
 
         con.close()
+
+    def existe_cliente(self):
+        con=sqlite3.connect("SistemaExpo")
+        cur=con.cursor()
+        cur.execute("SELECT * FROM Clientes WHERE cod_cliente='"+self.cod_cliente+"'")
+        con.commit()
+        dato=cur.fetchone()
+        
+        if dato:
+            con.close()
+            return True
+            
+        else:
+            con.close()
+            return False

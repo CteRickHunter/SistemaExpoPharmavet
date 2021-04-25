@@ -4,6 +4,10 @@ import sqlite3
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from datetime import datetime
 
 from Clases import Productos,Paises, Pais_Precios
 
@@ -35,10 +39,15 @@ def grabarPrecio(cod_pais,cod_prod,precio):
             return
         f=False
     
+    aux=precio.replace(".","")
+    if not aux.isdigit():
+        messagebox.showerror("ERROR", "El <<<Precio>>>\n deben ser numérico")
+        return
+
+
     if float(precio)<0.01:
         messagebox.showerror("ERROR", "El <<<Precio>>>\n deben ser positivo")
         return
-        f=False
     
     
     if(f==False):
@@ -46,8 +55,12 @@ def grabarPrecio(cod_pais,cod_prod,precio):
         return
     
     dato_p=Pais_Precios.Pais_Precios()
-    dato_p.setear_precio(cod_pais,cod_prod,precio)
-    dato_p.guardar_precio()
+    if dato_p.existe_precio(cod_pais,cod_prod):
+        dato_p.cambia_precio(cod_pais,cod_prod,precio)
+        
+    else:    
+        dato_p.setear_precio(cod_pais,cod_prod,precio)
+        dato_p.guardar_precio()
 
     
     limpiaDatos()
@@ -62,12 +75,38 @@ def limpiaDatos() :
         codigoProdEntry.focus()
     
 
+def buscarPrecio(pais,prod):
+    if len(pais)>2:
+        pais=pais[0:2]
+
+    if pais=="" or len(pais)<2:
+        messagebox.showerror("ERROR", "Cantidad del <<<Código de Pais>>>\n deben ser 2 caracteres")
+        return
+    
+    if len(prod)>10:
+        prod=prod[0:10]
+        
+    if prod=="" or len(prod)!=10:
+        if len(prod)!=10:
+            messagebox.showerror("ERROR", "Cantidad del <<<Código de Producto>>>\n deben ser 10 caracteres")
+            return
+
+    codigoProdEntry.set(prod)
+    codigoPaisEntry.set(pais)
+
+    print(pais, type(pais))
+    print(prod, type(prod))
+
+    tabla=Pais_Precios.Pais_Precios()
+    valor=tabla.busca_precio(pais,prod)
+    precio.set(valor)
+
 
 # - - - - - - - - - - Prog. Principal - - - - - - - 
 
 
 raiz=Tk()
-raiz.title("Carga de Precios x Pais")
+raiz.title("Ingresa y Modifica Precios x Pais")
 raiz.iconbitmap("images/logo.ico")
 raiz.resizable(0,0)
 
@@ -117,9 +156,14 @@ precioEntry=Entry(frame,textvariable=precio,width=10)
 precioEntry.grid(row=2,column=1,sticky="w",padx=5, pady=5)
 precioEntry.config(font="Arial 15")
 
+buscarBtn=Button(frame,text="Buscar", command=lambda:buscarPrecio(codigoPaisEntry.get(),codigoProdEntry.get()))
+buscarBtn.grid(row=2,column=1,sticky="e",ipady=5, pady=5)
+buscarBtn.config(width="10")
+
+
 
 guardarBtn=Button(frame,text="Guardar", command=lambda:grabarPrecio(codigoPaisEntry.get(),codigoProdEntry.get(),precio.get()))
-guardarBtn.grid(row=5,column=0,columnspan=2,ipady=5, pady=5)
+guardarBtn.grid(row=5,column=0,columnspan=2,ipady=5, pady=5, padx=40)
 guardarBtn.config(width="60")
 
 limpiarBtn=Button(frame,text="Limpiar", command=lambda:limpiaDatos())
@@ -127,7 +171,7 @@ limpiarBtn.grid(row=6,column=0,columnspan=2,ipady=5, pady=5)
 limpiarBtn.config(width="60")
 
 
-salirBtn=Button(frame,text="Salir",command=raiz.destroy)
+salirBtn=Button(frame,text="Salir", command=raiz.destroy)
 salirBtn.grid(row=7,column=0,columnspan=2,ipady=5, pady=5)
 salirBtn.config(width="60")
 

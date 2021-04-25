@@ -18,13 +18,7 @@ class Pedidos:
 
         con=sqlite3.connect("SistemaExpo")
         cur=con.cursor()
-        print("INSERT INTO Pedidos (fecha_pedido,cod_cliente,"+
-        "incoterm,seguro, seguro_importe,flete,flete_importe,condicion,nota)"+
-        " VALUES('"+self.fecha_pedido+"','"+self.cod_cliente+"','"+self.incoterm+"',"+
-        str(self.seguro)+","+str(self.seguro_importe)+","+
-        str(self.flete)+","+str(self.flete_importe)+",'"+
-        self.condicion+"','"+self.nota+"')")
-
+        
         cur.execute("INSERT INTO Pedidos (fecha_pedido,cod_cliente,"+
         "incoterm,seguro, seguro_importe,flete,flete_importe,condicion,nota)"+
         " VALUES('"+self.fecha_pedido+"','"+self.cod_cliente+"','"+self.incoterm+"',"+
@@ -58,7 +52,7 @@ class Pedidos:
             dato_txt=str(dato[0])+"-*-"+dato[1]
             lista.append(dato_txt)
             
-        print(lista)
+        #print(lista)
         return lista
         
     def busca_pedido(self,id):

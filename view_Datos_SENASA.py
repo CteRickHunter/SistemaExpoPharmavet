@@ -3,6 +3,7 @@
 import sqlite3
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 
 from Clases import Senasa
 
@@ -13,7 +14,6 @@ color="#f2d05e"
 
 def grabarDatosSenasa(cod,nom,nroexp,nrocer,nmn):
     
-
     # - - - Control Datos -----
     f=True
     if cod=="" or len(cod)!=6:
@@ -47,7 +47,13 @@ def grabarDatosSenasa(cod,nom,nroexp,nrocer,nmn):
     
     dato_s=Senasa.Senasa()
     dato_s.setear_senasa(cod,nom,nroexp,nrocer,nmn)
-    dato_s.guardar_senasa()
+
+    if dato_s.existe_producto():
+        # actualizar
+        dato_s.actualizar_producto()
+    else:
+        # insertar
+        dato_s.guardar_senasa()
 
 
     #puntero.execute("INSERT INTO Datos_SENASA VALUES('"+cod+"','"+nom+"','"+nroexp+"','"+nrocer+"','"+nmn+"')")
@@ -62,9 +68,58 @@ def limpiaDatos() :
     nro_expediente.set("")
     nro_certificado.set("")
     nomenclador.set("")
+    codigoProdEntry['state']='normal'
     codigoProdEntry.focus()
 
+def buscarDatosSenasa():
+    global hija
+    lista=[]
+    senasa=Senasa.Senasa()
+    lista_productos=senasa.leer_lista(lista)
+        
+    hija=Toplevel()
+    hija.title("Busca Producto Base")
+    hija.iconbitmap("images/logo.ico")
+    hija.resizable(0,0)
 
+    frame2=Frame(hija)
+    frame2.config(bg=color, width="650", height="350")
+    frame2.pack(fill="both", expand="False")
+
+ 
+    listaLbl=Label(frame2,text="producto:")
+    listaLbl.grid(row=1,column=0,padx=5, pady=5)
+    listaLbl.config(bg=color)
+
+    listaProdEntry=ttk.Combobox(frame2,values=lista_productos,width=40,state="readonly")
+    listaProdEntry.grid(row=1,column=1,sticky="w",padx=5, pady=5)
+    listaProdEntry.config(font="Arial 10")
+
+    
+    eligeItemBtn=Button(frame2,text="Elige Producto", command=lambda:muestra_producto(listaProdEntry.get()))
+    eligeItemBtn.grid(row=3,column=0,ipady=5, columnspan=2)
+    eligeItemBtn.config(width="20")
+
+def muestra_producto(prod):
+    global hija
+    # Busca registro donde apunta "prod"
+    cod_prod=prod[0:6]
+    senasa=Senasa.Senasa()
+    senasa.cod_producto_base=cod_prod
+    senasa.busca_nombre()
+
+    cod_producto_base.set(senasa.cod_producto_base)
+    nombre_producto.set(senasa.nombre_producto_SENASA)
+    nro_expediente.set(senasa.nro_expediente)
+    nro_certificado.set(senasa.nro_certificado)
+    nomenclador.set(senasa.nomenclador)
+    
+    codigoProdEntry['state']='disabled'
+
+
+    hija.destroy()
+
+    
 
 # - - - - - - - - - - Prog. Principal - - - - - - - 
 
@@ -128,6 +183,10 @@ nroCertificadoEntry.config(font="Arial 15")
 nomencladorEntry=Entry(frame,textvariable=nomenclador,width=15)
 nomencladorEntry.grid(row=4,column=1,sticky="w",padx=5, pady=5)
 nomencladorEntry.config(font="Arial 15")
+
+buscarBtn=Button(frame,text="Buscar", command=lambda:buscarDatosSenasa())
+buscarBtn.grid(row=0,column=1,sticky="e",padx=5, pady=5,ipady=5)
+buscarBtn.config(width="10")
 
 guardarBtn=Button(frame,text="Guardar", command=lambda:grabarDatosSenasa(cod_producto_base.get(),nombre_producto.get(),nro_expediente.get(),nro_certificado.get(),nomenclador.get()))
 guardarBtn.grid(row=5,column=0,columnspan=2,ipady=5)

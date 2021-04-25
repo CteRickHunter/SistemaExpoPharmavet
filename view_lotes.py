@@ -16,7 +16,7 @@ color="#f2d05e"
 
 def grabarLote(lote,elab,venc,cod):
     
-    print(cod)
+    #print(cod)
     
     # - - - Control Datos -----
     f=True
@@ -48,7 +48,7 @@ def grabarLote(lote,elab,venc,cod):
     if len(cod)>6:
         cod=cod[0:6]
 
-    print(cod)
+    #print(cod)
 
     if cod=="" or len(cod)!=6:
         if len(cod)!=6:
@@ -64,7 +64,15 @@ def grabarLote(lote,elab,venc,cod):
     #conectado=sqlite3.connect("SistemaExpo")
     #puntero=conectado.cursor()
     dato=Lotes.Lotes(lote,elab,venc,cod)
-    dato.guardar_lote()
+
+    # Si existe el registro, hacer UPDATE. Caso contrario, INSERT
+    if dato.existe_lote(lote):
+        dato.cambiar_lote()
+        
+    else:    
+        dato.guardar_lote()
+
+    
     
     #puntero.execute("INSERT INTO Lotes VALUES('"+lote+"','"+elab+"','"+venc+"','"+cod+"')")
     
@@ -79,7 +87,7 @@ def limpiaDatos() :
     codEntry.set("")
     cod.set("")
     
-    loteEntry.focus()
+    #loteEntry.focus()
     
 def verificaFechaErrada(fechaString):
     flag=False
@@ -129,8 +137,92 @@ def verificadiferenciaFecha(elab,venc):
         return False
 
 def buscarProducto(cod):
-    pass
+    global hija, frame2,listaProdEntry, eligeLoteBtn, lista_lotes,loteEntry
+    lista=[]
+    senasa=Senasa.Senasa()
+    lista_productos=senasa.leer_lista(lista)
+    lista_lotes=[]
+    
+    hija=Toplevel()
+    hija.title("Busca Producto Base")
+    hija.iconbitmap("images/logo.ico")
+    hija.resizable(0,0)
 
+    frame2=Frame(hija)
+    frame2.config(bg=color, width="650", height="350")
+    frame2.pack(fill="both", expand="False")
+
+ 
+    listaLbl=Label(frame2,text="producto:")
+    listaLbl.grid(row=1,column=0,padx=5, pady=5)
+    listaLbl.config(bg=color)
+
+    listaProdEntry=ttk.Combobox(frame2,values=lista_productos,width=40,state="readonly")
+    listaProdEntry.grid(row=1,column=1,sticky="w",padx=5, pady=5)
+    listaProdEntry.config(font="Arial 10")
+
+    loteLbl=Label(frame2,text="Lote:")
+    loteLbl.grid(row=2,column=0,padx=5, pady=5)
+    loteLbl.config(bg=color)
+
+    auxLbl=Label(frame2,text="")
+    auxLbl.grid(row=2,column=1,sticky="w",padx=5, pady=5)
+    
+
+    eligeItemBtn=Button(frame2,text="Elige Producto", command=lambda:muestra_lote(listaProdEntry.get()))
+    eligeItemBtn.grid(row=3,column=0,ipady=5)
+    eligeItemBtn.config(width="20")
+
+    eligeLoteBtn=Button(frame2,text="Elige Lote",state="disabled", command=lambda:elige_lote())
+    eligeLoteBtn.grid(row=3,column=1,ipady=5)
+    eligeLoteBtn.config(width="20")
+
+def muestra_lote(dato_prod):
+    global frame2, listaProdEntry, eligeLoteBtn, lista_lotes,loteEntry,dato
+    #Controlar que haya un dato en el producto
+    #print(dato_prod, len(dato_prod))
+    cod=dato_prod[0:6]
+    if not cod.isdigit():
+        eligeLoteBtn['state']="disabled"
+        return
+
+    prod=dato_prod[9:]
+    listaProdEntry.set(prod)
+    eligeLoteBtn['state']="normal"
+    
+    dato=Lotes.Lotes()
+    lista_lotes=dato.leer_lista(cod)
+    loteEntry=ttk.Combobox(frame2,values=lista_lotes,width=40)
+    loteEntry.grid(row=2,column=1,sticky="w",padx=5, pady=5)
+    loteEntry.config(font="Arial 10")
+
+    
+
+def elige_lote():
+    global hija,frame2,dato
+    #muesta Lote
+    num_lote=loteEntry.get()
+    num_lote=num_lote[0:8]
+    num_lote=num_lote.strip()
+    if num_lote=="":
+        messagebox.showerror("ERROR", "No existe lote para este producto")
+        hija.destroy()
+        return
+
+    lote.set(num_lote)
+    #Buscar el lote y mostrar resultado: fechas y producto base
+    dato.busca_lote(num_lote)
+    elab.set(dato.fecha_elab)
+    venc.set(dato.fecha_venc)
+    # Busca nombre producto base
+    nombre=Senasa.Senasa()
+    nombre.cod_producto_base=dato.cod_prod_base
+    nombre.busca_nombre()
+    dato_nombre=dato.cod_prod_base+"-*-"+nombre.nombre_producto_SENASA
+    codEntry.set(dato_nombre)
+
+    #Cierra pantalla hija
+    hija.destroy()
 
 
 # - - - - - - - - - - Prog. Principal - - - - - - - 
@@ -168,7 +260,7 @@ codLbl.config(bg=color)
 codLbl.grid(row=3,column=0,sticky="e",padx=5, pady=5)
 
 # - - - - - Entrys - - - - - - 
-loteEntry=Entry(frame,textvariable=lote)
+loteEntry=Entry(frame,textvariable=lote,width=8)
 loteEntry.grid(row=0,column=1,sticky="w",padx=5, pady=5,ipady=5)
 loteEntry.config(font="Arial 15")
 
@@ -192,9 +284,9 @@ guardarBtn=Button(frame,text="Guardar", command=lambda:grabarLote(lote.get(),ela
 guardarBtn.grid(row=4,column=0,ipady=5,sticky="ew")
 guardarBtn.config(width="30")
 
-guardarBtn=Button(frame,text="Buscar", command=lambda:buscarProducto(cod.get()))
-guardarBtn.grid(row=4,column=1,ipady=5,sticky="ew")
-guardarBtn.config(width="30")
+buscarBtn=Button(frame,text="Buscar", command=lambda:buscarProducto(cod.get()))
+buscarBtn.grid(row=4,column=1,ipady=5,sticky="ew")
+buscarBtn.config(width="30")
 
 
 limpiarBtn=Button(frame,text="Limpiar", command=lambda:limpiaDatos())

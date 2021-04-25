@@ -1,10 +1,4 @@
-a="23.15"
-c=a.replace(".","")
-if c.isdigit():
-    print("son dígitos")
-else:
-    print("no son dígitos")
+import subprocess
 
-b=float(a)
-print(b,type(b))
-print(c)
+subprocess.run(["python","view_pedidos.py"])
+
